@@ -21,8 +21,8 @@ from tqdm.notebook import tqdm
 ##hypeperameters and experimental settings
 RANDOM_SEED=666
 DATASET = 'PU'    ## PU  IP  SA  
-TRAIN_RATE = 0.01  ## ratio of training data
-VAL_RATE = 0.01    ## ratio of valuating data
+TRAIN_RATE = 0.02  ## ratio of training data
+VAL_RATE = 0.02    ## ratio of valuating data
 EPOCH = 100    ##number of epoch
 VAL_EPOCH = 5  ##interval of valuation
 LR = 0.001    ##learning rate
@@ -402,9 +402,9 @@ test_true = test_gt[test_gt!=0]
 Training_Time = toc1 - tic1
 Test_time = toc2 - tic2
 
-OA = accuracy_score(test_true,test_pred)*100
-AA = recall_score(test_true,test_pred,average='macro')*100
-kappa = cohen_kappa_score(test_true,test_pred)*100
+OA = accuracy_score(test_true,test_pred)
+AA = recall_score(test_true,test_pred,average='macro')
+kappa = cohen_kappa_score(test_true,test_pred)
 report_log = F"OA: {OA}\nAA: {AA}\nKappa: {kappa}\n"
 report_log += F"Training time: {Training_Time}\n Test_time: {Test_time}\n"
 report_log += classification_report(test_true,test_pred,target_names=class_name,digits=4)
