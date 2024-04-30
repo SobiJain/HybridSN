@@ -402,11 +402,11 @@ test_true = test_gt[test_gt!=0]
 Training_Time = toc1 - tic1
 Test_time = toc2 - tic2
 
-OA = accuracy_score(test_true,test_pred)
-AA = recall_score(test_true,test_pred,average='macro')
-kappa = cohen_kappa_score(test_true,test_pred)
+OA = accuracy_score(test_true,test_pred)*100
+AA = recall_score(test_true,test_pred,average='macro')*100
+kappa = cohen_kappa_score(test_true,test_pred)*100
 report_log = F"OA: {OA}\nAA: {AA}\nKappa: {kappa}\n"
-report_log = F"Training time: {Training_Time}\n Test_time: {Test_time}\n"
+report_log += F"Training time: {Training_Time}\n Test_time: {Test_time}\n"
 report_log += classification_report(test_true,test_pred,target_names=class_name,digits=4)
 print(report_log)
 fp = open(os.path.join(SAVE_PATH,'classfication_report.txt'),'w+')
