@@ -12,6 +12,7 @@ from sklearn.decomposition import PCA
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report,recall_score,cohen_kappa_score,accuracy_score
 from scipy.io import loadmat
+import scipy.io as sio
 import os
 import time
 from tqdm.notebook import tqdm
@@ -20,9 +21,9 @@ from tqdm.notebook import tqdm
 # %%
 ##hypeperameters and experimental settings
 RANDOM_SEED=666
-DATASET = 'PU'    ## PU  IP  SA  
-TRAIN_RATE = 0.02  ## ratio of training data
-VAL_RATE = 0.02    ## ratio of valuating data
+DATASET = 'IP'    ## PU  IP  SA  
+TRAIN_RATE = 0.1  ## ratio of training data
+VAL_RATE = 0.1    ## ratio of valuating data
 EPOCH = 100    ##number of epoch
 VAL_EPOCH = 5  ##interval of valuation
 LR = 0.001    ##learning rate
@@ -49,8 +50,8 @@ torch.backends.cudnn.benchmark = False
 def loadData(name):
     data_path = os.path.join(os.getcwd(),'')
     if name == 'IP':
-        data = loadmat(os.path.join(data_path, 'IndianPines\\Indian_pines_corrected.mat'))['indian_pines_corrected']
-        labels = loadmat(os.path.join(data_path, 'IndianPines\\Indian_pines_gt.mat'))['indian_pines_gt']
+        data = loadmat(os.path.join(data_path, '/content/drive/MyDrive/Data/Indian_pines_corrected.mat'))['indian_pines_corrected']
+        labels = loadmat(os.path.join(data_path, '/content/drive/MyDrive/Data/Indian_pines_gt.mat'))['indian_pines_gt']
         class_name = [ "Alfalfa", "Corn-notill", "Corn-mintill","Corn", "Grass-pasture", 
                        "Grass-trees","Grass-pasture-mowed", "Hay-windrowed", "Oats","Soybean-notill", "Soybean-mintill", "Soybean-clean","Wheat", "Woods", "Buildings-Grass-Trees-Drives","Stone-Steel-Towers"]
     elif name == 'SA':
@@ -63,6 +64,27 @@ def loadData(name):
         labels = loadmat(os.path.join(data_path, '/content/drive/MyDrive/Data/PaviaU_gt.mat'))['paviaU_gt']
         class_name = ['Asphalt', 'Meadows', 'Gravel', 'Trees','Painted metal sheets', 'Bare Soil', 
                       'Bitumen','Self-Blocking Bricks', 'Shadows']
+
+    elif(Dataset == 'WHU_HH'):
+      uHouston = sio.loadmat('/content/drive/MyDrive/Data/WHU data/WHU-Hi-HongHu/WHU_Hi_HongHu.mat')
+      gt_uHouston = sio.loadmat('/content/drive/MyDrive/Data/WHU data/WHU-Hi-HongHu/WHU_Hi_HongHu_gt.mat')
+      data = uHouston['WHU_Hi_HongHu']
+      labels = gt_uHouston['WHU_Hi_HongHu_gt']
+      data = data[700:941, :330, :]
+      labels = labels[700:941, :330]
+      class_name = ['Brocoli_green_weeds_1','Brocoli_green_weeds_2','Fallow',
+                        'Fallow_rough_plow','Fallow_smooth','Stubble','Celery','Grapes_untrained','Soil_vinyard_develop','Corn_senesced_green','Lettuce_romaine_4wk','Lettuce_romaine_5wk','Lettuce_romaine_6wk','Lettuce_romaine_7wk','Vinyard_untrained','Vinyard_vertical']
+
+    elif(Dataset == 'WHU_HC'):
+      uHouston = sio.loadmat('/content/drive/MyDrive/Data/WHU data/WHU-Hi-HanChuan/WHU_Hi_HanChuan.mat')
+      gt_uHouston = sio.loadmat('/content/drive/MyDrive/Data/WHU data/WHU-Hi-HanChuan/WHU_Hi_HanChuan_gt.mat')
+      data = uHouston['WHU_Hi_HanChuan']
+      gt = gt_uHouston['WHU_Hi_HanChuan_gt']
+      data = data[380:870, 43:253, :]
+      labels = labels[380:870, 43:253]
+      class_name = ['Brocoli_green_weeds_1','Brocoli_green_weeds_2','Fallow',
+                        'Stubble','Celery','Grapes_untrained','Soil_vinyard_develop','Corn_senesced_green','Lettuce_romaine_4wk','Lettuce_romaine_5wk','Lettuce_romaine_6wk','Lettuce_romaine_7wk','Vinyard_untrained','Vinyard_vertical']
+    
     return data, labels, class_name
 
 
@@ -409,6 +431,6 @@ report_log = F"OA: {OA}\nAA: {AA}\nKappa: {kappa}\n"
 report_log += F"Training time: {Training_Time}\n Test_time: {Test_time}\n"
 report_log += classification_report(test_true,test_pred,target_names=class_name,digits=4)
 print(report_log)
-fp = open(os.path.join(SAVE_PATH,'classfication_report.txt'),'w+')
+fp = open(os.path.join(SAVE_PATH,'classfication_report '+str(DATASET)+' '+str(TRAIN_RATE)+'.txt'),'w+')
 fp.writelines(report_log)
 fp.close()
