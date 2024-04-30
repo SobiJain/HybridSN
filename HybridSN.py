@@ -13,15 +13,16 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report,recall_score,cohen_kappa_score,accuracy_score
 from scipy.io import loadmat
 import os
+import time
 from tqdm.notebook import tqdm
-%matplotlib inline
+# %matplotlib inline
 
 # %%
 ##hypeperameters and experimental settings
 RANDOM_SEED=666
-DATASET = 'SA'    ## PU  IP  SA  
-TRAIN_RATE = 0.3  ## ratio of training data
-VAL_RATE = 0.1    ## ratio of valuating data
+DATASET = 'PU'    ## PU  IP  SA  
+TRAIN_RATE = 0.01  ## ratio of training data
+VAL_RATE = 0.01    ## ratio of valuating data
 EPOCH = 100    ##number of epoch
 VAL_EPOCH = 5  ##interval of valuation
 LR = 0.001    ##learning rate
@@ -46,7 +47,7 @@ torch.backends.cudnn.benchmark = False
 
 # %%
 def loadData(name):
-    # data_path = os.path.join(os.getcwd(),'dataset')
+    data_path = os.path.join(os.getcwd(),'')
     if name == 'IP':
         data = loadmat(os.path.join(data_path, 'IndianPines\\Indian_pines_corrected.mat'))['indian_pines_corrected']
         labels = loadmat(os.path.join(data_path, 'IndianPines\\Indian_pines_gt.mat'))['indian_pines_gt']
@@ -71,14 +72,14 @@ NUM_CLASS = label.max()
 
 # %%
 ## display HSI
-rgb_view=spectral.imshow(data,(30,20,10),classes=label,title='RGB origin',figsize=(7,7))
-gt_view = spectral.imshow(classes=label, title='GroundTruth',figsize=(7,7))
-view = spectral.imshow(data,(30,20,10),classes=label,figsize=(7,7))
-view.set_display_mode('overlay')
-view.class_alpha = 0.5
-view.set_title('Overlay')
-spectral.save_rgb(f'results/{DATASET}_RGB_origin.jpg',data,(30,20,10))
-spectral.save_rgb(f'results/{DATASET}_gt.jpg',label,colors = spectral.spy_colors)
+# rgb_view=spectral.imshow(data,(30,20,10),classes=label,title='RGB origin',figsize=(7,7))
+# gt_view = spectral.imshow(classes=label, title='GroundTruth',figsize=(7,7))
+# view = spectral.imshow(data,(30,20,10),classes=label,figsize=(7,7))
+# view.set_display_mode('overlay')
+# view.class_alpha = 0.5
+# view.set_title('Overlay')
+# spectral.save_rgb(f'results/{DATASET}_RGB_origin.jpg',data,(30,20,10))
+# spectral.save_rgb(f'results/{DATASET}_gt.jpg',label,colors = spectral.spy_colors)
 
 # %%
 ## show 3D cube
@@ -294,6 +295,7 @@ val_num = val_loader.dataset.__len__()
 fig = plt.figure()
 ax1 = fig.add_subplot(2,1,1)
 ax2 = fig.add_subplot(2,1,2)
+tic1 = time.perf_counter()
 try:
     for e in tqdm(range(EPOCH), desc="Training:"):
         model.train()
@@ -340,7 +342,7 @@ except Exception as exc:
     print(exc)
 finally: 
     print(f'Stop in epoch {e}')
-
+toc1 = time.perf_counter()
 
 # %%
 ## get best model path and del other models
@@ -379,26 +381,32 @@ best_model.load_state_dict(torch.load(best_model_path))
 best_model.to(device)
 best_model.eval()
 pred_map = []
+tic2 = time.perf_counter()
 for batch_idx, data in tqdm(enumerate(all_loader),total=len(all_loader)):
     data = data.to(device)
     target = best_model(data)
     _, pred = torch.max(target, dim = 1)
     pred_map += [np.array(pred.detach().cpu() + 1)]   ## class 0 in pred_map is class 1 in gt
+toc2 = time.perf_counter()
 pred_map = np.asarray(np.hstack(pred_map),dtype=np.uint8).reshape(label.shape[0],label.shape[1])
-spectral.imshow(classes=pred_map,title='prediction',figsize=(7,7))
-spectral.imshow(classes=pred_map*(label!=0),title='prediction_masked',figsize=(7,7))
-spectral.save_rgb(os.path.join(SAVE_PATH,f"prediction.jpg"),pred_map,colors = spectral.spy_colors)
-spectral.save_rgb(os.path.join(SAVE_PATH,f"prediction_masked.jpg"),pred_map*(label!=0),colors = spectral.spy_colors)
+# spectral.imshow(classes=pred_map,title='prediction',figsize=(7,7))
+# spectral.imshow(classes=pred_map*(label!=0),title='prediction_masked',figsize=(7,7))
+# spectral.save_rgb(os.path.join(SAVE_PATH,f"prediction.jpg"),pred_map,colors = spectral.spy_colors)
+# spectral.save_rgb(os.path.join(SAVE_PATH,f"prediction_masked.jpg"),pred_map*(label!=0),colors = spectral.spy_colors)
 
 # %%
 ## classfication report
 test_pred = pred_map[test_gt!=0]
 test_true = test_gt[test_gt!=0]
 
+Training_Time = toc1 - tic1
+Test_time = toc2 - tic2
+
 OA = accuracy_score(test_true,test_pred)
 AA = recall_score(test_true,test_pred,average='macro')
 kappa = cohen_kappa_score(test_true,test_pred)
 report_log = F"OA: {OA}\nAA: {AA}\nKappa: {kappa}\n"
+report_log = F"Training time: {Training_Time}\n Test_time: {Test_time}\n"
 report_log += classification_report(test_true,test_pred,target_names=class_name,digits=4)
 print(report_log)
 fp = open(os.path.join(SAVE_PATH,'classfication_report.txt'),'w+')
