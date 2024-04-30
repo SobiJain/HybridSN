@@ -21,9 +21,9 @@ from tqdm.notebook import tqdm
 # %%
 ##hypeperameters and experimental settings
 RANDOM_SEED=666
-DATASET = 'WHU_HH'    ## PU  IP  SA  
-TRAIN_RATE = 0.01  ## ratio of training data
-VAL_RATE = 0.01    ## ratio of valuating data
+DATASET = 'WHU_HC'    ## PU  IP  SA  
+TRAIN_RATE = 0.05  ## ratio of training data
+VAL_RATE = 0.05    ## ratio of valuating data
 EPOCH = 100    ##number of epoch
 VAL_EPOCH = 5  ##interval of valuation
 LR = 0.001    ##learning rate
@@ -81,7 +81,7 @@ def loadData(name):
         data = uHouston['WHU_Hi_HanChuan']
         gt = gt_uHouston['WHU_Hi_HanChuan_gt']
         data = data[380:870, 43:253, :]
-        labels = labels[380:870, 43:253]
+        labels = gt[380:870, 43:253]
         class_name = ['Brocoli_green_weeds_1','Brocoli_green_weeds_2','Fallow',
                         'Stubble','Celery','Grapes_untrained','Soil_vinyard_develop','Corn_senesced_green','Lettuce_romaine_4wk','Lettuce_romaine_5wk','Lettuce_romaine_6wk','Lettuce_romaine_7wk','Vinyard_untrained','Vinyard_vertical']
     
